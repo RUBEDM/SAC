@@ -198,6 +198,6 @@
   }
 
   // Tag EXACTO al del manifest
-  customElements.define("com-oscar-exportxmlstory", ExportXmlStory);
+  customElements.define("com-rubedm-exportcsvstory", ExportXmlStory);
 
 })();
