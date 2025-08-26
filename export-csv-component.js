@@ -23,8 +23,8 @@
         <span class="hint" id="tsHint"></span>
       </div>
       <div class="row">
-        <label>Payload (JSON array or XML)</label>
-        <textarea id="payload" placeholder='[{"colA":1,"colB":"x"},{"colA":2,"colB":"y"}] or <rows><row>...</row></rows>'></textarea>
+        <label>Payload (JSON array or CSV)</label>
+        <textarea id="payload" placeholder='[{"colA":1,"colB":"x"},{"colA":2,"colB":"y"}]'></textarea>
       </div>
       <div class="row">
         <button id="go">Export to CSV</button>
@@ -33,10 +33,9 @@
     </div>
   `;
 
-  class ExportXmlStory extends HTMLElement {
+  class ExportCsvStory extends HTMLElement {
 
     constructor() {
-      debugger;
       super();
       this.attachShadow({ mode: "open" }).appendChild(template.content.cloneNode(true));
 
@@ -76,7 +75,6 @@
 
     /* ========= SAC → cambios de propiedades ========= */
     onCustomWidgetAfterUpdate(changedProps){
-      debugger;
       if (!changedProps) return;
       if (Object.prototype.hasOwnProperty.call(changedProps, "fileNamePrefix"))
         this.fileNamePrefix = changedProps.fileNamePrefix || "export";
@@ -123,32 +121,32 @@
       try{
         const content = String(text || "");
         if (!content){
-          this._setMsg("Please enter JSON or XML in the payload box (or call setPayload).", "warn");
+          this._setMsg("Please enter a JSON array in the payload box (or call setPayload).", "warn");
           return;
         }
-        const xml = this._ensureXml(content);
+        const csv = this._ensureCsv(content);
         const name = this._currentFileName();
 
         // 1) Camino SAC (SAPUI5)
         try {
           if (window.sap && sap.ui && sap.ui.core && sap.ui.core.util && sap.ui.core.util.File) {
-            sap.ui.core.util.File.save(xml, name, "xml", "application/xml", "utf-8");
-            this._setMsg(`Exported as ${name}.xml`, "ok");
+            sap.ui.core.util.File.save(csv, name, "csv", "text/csv", "utf-8");
+            this._setMsg(`Exported as ${name}.csv`, "ok");
             this.dispatchEvent(new CustomEvent("onExported"));
             return;
           }
         } catch (e) { /* fallback */ }
 
         // 2) Fallback navegador
-        const blob = new Blob([xml], { type: "application/xml;charset=utf-8;" });
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
         const url  = URL.createObjectURL(blob);
         const a    = document.createElement("a");
-        a.href = url; a.download = name + ".xml";
+        a.href = url; a.download = name + ".csv";
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        this._setMsg(`Exported as ${name}.xml (fallback)`, "ok");
+        this._setMsg(`Exported as ${name}.csv (fallback)`, "ok");
         this.dispatchEvent(new CustomEvent("onExported"));
 
       } catch(err){
@@ -156,39 +154,31 @@
       }
     }
 
-    _ensureXml(text){
+    _ensureCsv(text){
       const str = String(text || "");
-      // JSON array? → XML tabular
       try {
         const data = JSON.parse(str);
-        if (Array.isArray(data)) return this._jsonArrayToXml(data);
-      } catch(e){ /* not JSON */ }
-      // Añade cabecera si falta
-      if (!str.trim().startsWith("<?xml")) {
-        return '<?xml version="1.0" encoding="UTF-8"?>\n' + str;
+        if (Array.isArray(data)) return this._jsonArrayToCsv(data);
+        throw new Error("The provided payload is not a valid JSON array.");
+      } catch(e){ 
+        throw new Error("The provided payload is not valid JSON."); 
       }
-      return str;
     }
 
-    _jsonArrayToXml(arr){
-      const out = ['<?xml version="1.0" encoding="UTF-8"?>','<rows>'];
-      for (const row of arr){
-        out.push('  <row>');
-        for (const k in row){
-          if (Object.prototype.hasOwnProperty.call(row, k)) {
-            out.push(`    <${k}>${this._esc(row[k])}</${k}>`);
-          }
-        }
-        out.push('  </row>');
-      }
-      out.push('</rows>');
-      return out.join('\n');
-    }
+    _jsonArrayToCsv(arr){
+      if (arr.length === 0) return "";
 
-    _esc(v){
-      return (v==null?'':String(v))
-        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-        .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
+      const keys = Object.keys(arr[0]);
+      const lines = [keys.join(",")];
+
+      for (const row of arr) {
+        lines.push(keys.map(key => {
+          const val = row[key] == null ? "" : String(row[key]).replace(/"/g, '""');
+          return `"${val}"`;
+        }).join(","));
+      }
+
+      return lines.join("\n");
     }
 
     _setMsg(text, cls){
@@ -198,6 +188,6 @@
   }
 
   // Tag EXACTO al del manifest
-  customElements.define("com-rubedm-exportcsvstory", ExportXmlStory);
+  customElements.define("com-oscar-exportcsvstory", ExportCsvStory);
 
 })();
