@@ -140,15 +140,15 @@
         } catch (e) { /* fallback */ }
 
         // 2) Fallback navegador
-        const blob = new Blob([xml], { type: "application/xml;charset=utf-8;" });
+        const blob = new Blob([csv], { type: "application/csv;charset=utf-8;" });
         const url  = URL.createObjectURL(blob);
         const a    = document.createElement("a");
-        a.href = url; a.download = name + ".xml";
+        a.href = url; a.download = name + ".csv";
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        this._setMsg(`Exported as ${name}.xml (fallback)`, "ok");
+        this._setMsg(`Exported as ${name}.csv (fallback)`, "ok");
         this.dispatchEvent(new CustomEvent("onExported"));
 
       } catch(err){
