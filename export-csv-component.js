@@ -126,7 +126,7 @@
           this._setMsg("Please enter JSON or XML in the payload box (or call setPayload).", "warn");
           return;
         }
-        const xml = this._ensureXml(content);
+        const csv = this._ensureCsv(content);
         const name = this._currentFileName();
 
         // 1) Camino SAC (SAPUI5)
@@ -156,34 +156,27 @@
       }
     }
 
-    _ensureXml(text){
-      const str = String(text || "");
-      // JSON array? → XML tabular
-      try {
-        const data = JSON.parse(str);
-        if (Array.isArray(data)) return this._jsonArrayToXml(data);
-      } catch(e){ /* not JSON */ }
-      // Añade cabecera si falta
-      if (!str.trim().startsWith("<?xml")) {
-        return '<?xml version="1.0" encoding="UTF-8"?>\n' + str;
-      }
-      return str;
-    }
+   _ensureCsv(text){
+  const str = String(text || "");
+  // JSON array? → CSV tabular
+  try {
+    const data = JSON.parse(str);
+    if (Array.isArray(data)) return this._jsonArrayToCsv(data);
+  } catch(e){ /* not JSON */ }
+  // Falls kein JSON, gib den Text so aus (könnte bereits CSV sein)
+  return str;
+}
 
-    _jsonArrayToXml(arr){
-      const out = ['<?xml version="1.0" encoding="UTF-8"?>','<rows>'];
-      for (const row of arr){
-        out.push('  <row>');
-        for (const k in row){
-          if (Object.prototype.hasOwnProperty.call(row, k)) {
-            out.push(`    <${k}>${this._esc(row[k])}</${k}>`);
-          }
-        }
-        out.push('  </row>');
-      }
-      out.push('</rows>');
-      return out.join('\n');
-    }
+_jsonArrayToCsv(arr) {
+  if (!Array.isArray(arr) || arr.length === 0) return "";
+  const keys = Object.keys(arr[0]);
+  const esc = v => `"${String(v).replace(/"/g,'""')}"`;
+  const lines = [
+    keys.join(","), // Header
+    ...arr.map(row => keys.map(k => esc(row[k])).join(","))
+  ];
+  return lines.join("\n");
+}
 
     _esc(v){
       return (v==null?'':String(v))
