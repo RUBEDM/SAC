@@ -132,7 +132,7 @@
         // 1) Camino SAC (SAPUI5)
         try {
           if (window.sap && sap.ui && sap.ui.core && sap.ui.core.util && sap.ui.core.util.File) {
-            sap.ui.core.util.File.save(xml, name, "csv", "application/csv", "utf-8");
+            sap.ui.core.util.File.save(csv, name, "csv", "application/csv", "utf-8");
             this._setMsg(`Exported as ${name}.csv`, "ok");
             this.dispatchEvent(new CustomEvent("onExported"));
             return;
