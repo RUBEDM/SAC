@@ -27,7 +27,7 @@
         <textarea id="payload" placeholder='[{"colA":1,"colB":"x"},{"colA":2,"colB":"y"}] or <rows><row>...</row></rows>'></textarea>
       </div>
       <div class="row">
-        <button id="go">Export to XML</button>
+        <button id="go">Export to CSV</button>
         <span id="msg" class="hint"></span>
       </div>
     </div>
