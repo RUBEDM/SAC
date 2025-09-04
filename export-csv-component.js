@@ -33,7 +33,7 @@
     </div>
   `;
 
-  class ExportXmlStory extends HTMLElement {
+  class ExportCSVStory extends HTMLElement {
 
     constructor() {
       debugger;
@@ -191,6 +191,6 @@ _jsonArrayToCsv(arr) {
   }
 
   // Tag EXACTO al del manifest
-  customElements.define("com-rubedm-exportcsvstory", ExportXmlStory);
+  customElements.define("com-rubedm-exportcsvstory", ExportCSVStory);
 
 })();
